@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <PropertyGroup>
+    <TargetFrameworks>net462;netcoreapp3.0</TargetFrameworks>
+    <OutputType>WinExe</OutputType>
+    <UseWPF>true</UseWPF>
+
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <OutputPath>../$(Configuration)/$(Platform)/</OutputPath>
+    <Platforms>x64;x86</Platforms>
+  </PropertyGroup>
+</Project>

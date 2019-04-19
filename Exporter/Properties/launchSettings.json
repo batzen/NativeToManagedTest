@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Exporter": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\DEV\\OSS_Own\\NativeToManagedTest\\Debug\\Exporter.dll C:\\DEV\\OSS_Own\\NativeToManagedTest\\Debug\\ManagedWithDllExport.netcoreapp3.0.dll"
+    }
+  }
+}
