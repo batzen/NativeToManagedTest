@@ -153,14 +153,14 @@
                 this.method = method ?? throw new ArgumentNullException(nameof(method));
                 this.exportAttribute = method.CustomAttributes.FirstOrDefault(IsDllExportAttribute) ?? throw new ArgumentException($"No DllExport attribute found on method '{method.FullName}'.");
 
-                this.ExportName = GetExportNameFromAttribute(this.exportAttribute);
+                this.EntryPoint = GetEntryPointFromAttribute(this.exportAttribute);
                 
                 this.CallingConvention = GetCallingConventionFromAttribute(this.exportAttribute);
 
                 this.CallingConventionClass = GetCallingConventionClass((ModuleDefMD)method.Module, this.CallingConvention);
             }            
 
-            public string ExportName { get; }
+            public string EntryPoint { get; }
 
             public CallingConvention CallingConvention { get; }
 
@@ -168,16 +168,16 @@
 
             public MethodDef ApplyExport()
             {
-                this.method.ExportInfo = new MethodExportInfo(this.ExportName) { Options = MethodExportInfoOptions.FromUnmanaged };
+                this.method.ExportInfo = new MethodExportInfo(this.EntryPoint) { Options = MethodExportInfoOptions.FromUnmanaged };
 
                 SetCallingConventionForMethod(this.method, this.CallingConventionClass);
 
                 return this.method;
             }
 
-            private static UTF8String GetExportNameFromAttribute(ICustomAttribute exportAttribute)
+            private static UTF8String GetEntryPointFromAttribute(ICustomAttribute exportAttribute)
             {
-                var valueFromAttribute = exportAttribute?.Properties.FirstOrDefault(x => x.Name == "ExportName")?.Value as UTF8String;
+                var valueFromAttribute = exportAttribute?.Properties.FirstOrDefault(x => x.Name == "EntryPoint")?.Value as UTF8String;
 
                 if (string.IsNullOrEmpty(valueFromAttribute))
                 {

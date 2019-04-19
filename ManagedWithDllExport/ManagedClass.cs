@@ -37,7 +37,7 @@ namespace ManagedWithDllExport
             messageId = RegisterWindowMessage("Injector_GOBABYGO!");
         }
 
-        [DllExport(ExportName = "Blubb")]
+        [DllExport(EntryPoint = "Blubb")]
         public static void XX()
         {
             Console.WriteLine(GetHelloString());
@@ -101,7 +101,7 @@ namespace ManagedWithDllExport
         //{ 
         //}
 
-        public string ExportName { get; set; }
+        public string EntryPoint { get; set; }
 
         public CallingConvention CallingConvention { get; set; } = CallingConvention.Cdecl;        
     }
