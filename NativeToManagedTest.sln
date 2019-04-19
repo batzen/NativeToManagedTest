@@ -12,7 +12,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ManagedWithDllExport", "Man
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Exporter", "Exporter\Exporter.csproj", "{F43ABEBF-5619-4D29-8192-A64277B01F15}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WpfApp1", "WpfApp1\WpfApp1.csproj", "{EF45A613-BFFB-4D86-80FA-2C0BB9558D86}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WPFTestApp", "WPFTestApp\WPFTestApp.csproj", "{EF45A613-BFFB-4D86-80FA-2C0BB9558D86}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

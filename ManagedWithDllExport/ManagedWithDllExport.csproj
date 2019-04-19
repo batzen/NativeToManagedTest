@@ -8,7 +8,6 @@
 
     <PropertyGroup>
         <TargetName>$(AssemblyName).$(TargetFramework)</TargetName>
-        <OutputPath>..\$(Configuration)\</OutputPath>
     </PropertyGroup>
 
     <Target Name="DllExport" Condition="Exists('$(TargetPath)')" AfterTargets="CopyFilesToOutputDirectory">
