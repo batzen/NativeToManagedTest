@@ -64,7 +64,7 @@
             using var module = ModuleDefMD.Load(assembly, creationOptions);
 
             //module.Characteristics |= dnlib.PE.Characteristics.Dll;
-            module.Cor20HeaderFlags &= ~dnlib.DotNet.MD.ComImageFlags.ILOnly;
+            module.Cor20HeaderFlags &= ~ComImageFlags.ILOnly;
 
             ChangeBitness(module, bitness);
 
@@ -90,7 +90,7 @@
             using var module = ModuleDefMD.Load(assembly, creationOptions);
 
             //module.Characteristics |= dnlib.PE.Characteristics.Dll;
-            module.Cor20HeaderFlags &= ~dnlib.DotNet.MD.ComImageFlags.ILOnly;
+            module.Cor20HeaderFlags &= ~ComImageFlags.ILOnly;
 
             ChangeBitness(module, bitness);
 
@@ -114,14 +114,14 @@
             {
                 case Bitness.x86:
                     module.Machine = dnlib.PE.Machine.I386;
-                    module.Cor20HeaderFlags &= ~dnlib.DotNet.MD.ComImageFlags.Bit32Preferred;
-                    module.Cor20HeaderFlags |= dnlib.DotNet.MD.ComImageFlags.Bit32Required;
+                    module.Cor20HeaderFlags &= ~ComImageFlags.Bit32Preferred;
+                    module.Cor20HeaderFlags |= ComImageFlags.Bit32Required;
                     break;
 
                 case Bitness.x64:
                     module.Machine = dnlib.PE.Machine.AMD64;
-                    module.Cor20HeaderFlags &= ~dnlib.DotNet.MD.ComImageFlags.Bit32Preferred;
-                    module.Cor20HeaderFlags &= ~dnlib.DotNet.MD.ComImageFlags.Bit32Required;
+                    module.Cor20HeaderFlags &= ~ComImageFlags.Bit32Preferred;
+                    module.Cor20HeaderFlags &= ~ComImageFlags.Bit32Required;
                     break;
             }
         }
