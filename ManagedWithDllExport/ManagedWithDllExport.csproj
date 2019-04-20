@@ -16,8 +16,8 @@
         <Exec Command="$(OutputPath)\exporter.exe &quot;$(TargetPath)&quot;" WorkingDirectory="$(OutputPath)" />
 
         <ItemGroup>
-            <FileWrites Include="$([System.IO.Path]::GetFullPath('$(OutputPath)'))\$(TargetName).Exported.*.dll" />
-            <FileWrites Include="$([System.IO.Path]::GetFullPath('$(OutputPath)'))\$(TargetName).Exported.*.pdb" />
+            <FileWrites Include="$([System.IO.Path]::GetFullPath('$(OutputPath)'))\$(TargetName).*.dll" />
+            <FileWrites Include="$([System.IO.Path]::GetFullPath('$(OutputPath)'))\$(TargetName).*.pdb" />
         </ItemGroup>
     </Target>
 </Project>

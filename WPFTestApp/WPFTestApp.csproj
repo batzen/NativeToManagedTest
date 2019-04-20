@@ -5,7 +5,7 @@
     <UseWPF>true</UseWPF>
 
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <OutputPath>../$(Configuration)/$(Platform)/</OutputPath>
+    <OutputPath>../bin/$(Configuration)/$(Platform)/</OutputPath>
     <Platforms>x64;x86</Platforms>
   </PropertyGroup>
 </Project>
