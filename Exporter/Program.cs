@@ -40,14 +40,14 @@
                     }
                 }                
 
-                CreateAssembly(assembly, Bitness.x86);
-                CreateAssembly(assembly, Bitness.x64);
+                //CreateAssembly(assembly, Bitness.x86);
+                //CreateAssembly(assembly, Bitness.x64);
 
                 Console.WriteLine($"Generating x86 version for '{assembly}'...");
-                CreateAssemblyWithExports(assembly, Bitness.x86);
+                CreateAssembly(assembly, Bitness.x86, ExportMethods);
 
                 Console.WriteLine($"Generating x64 version for '{assembly}'...");
-                CreateAssemblyWithExports(assembly, Bitness.x64);
+                CreateAssembly(assembly, Bitness.x64, ExportMethods);
 
                 Console.WriteLine($"Generated exported assembly for '{assembly}'.");
             }
@@ -55,7 +55,7 @@
             return 0;
         }
 
-        private static void CreateAssembly(string assembly, Bitness bitness)
+        private static void CreateAssembly(string assembly, Bitness bitness, Action<ModuleDefMD> modifyAction = null)
         {
             var creationOptions = new ModuleCreationOptions
                                   {
@@ -67,44 +67,20 @@
             module.Cor20HeaderFlags &= ~ComImageFlags.ILOnly;
 
             ChangeBitness(module, bitness);
+
+            modifyAction?.Invoke(module);
 
             var path = Path.GetDirectoryName(module.Location);
             var filename = Path.GetFileNameWithoutExtension(module.Location);
             var extension = Path.GetExtension(module.Location);
             var saveFilename = $"{filename}.{bitness}{extension}";
+
             var moduleWriterOptions = new ModuleWriterOptions(module)
                                       {
                                           AddCheckSum = true,
                                           WritePdb = true
                                       };
-            //Console.WriteLine(moduleWriterOptions.WritePdb);
-            module.Write(Path.Combine(path, saveFilename), moduleWriterOptions);
-        }
 
-        private static void CreateAssemblyWithExports(string assembly, Bitness bitness)
-        {
-            var creationOptions = new ModuleCreationOptions
-                                  {
-                                      TryToLoadPdbFromDisk = true
-                                  };
-            using var module = ModuleDefMD.Load(assembly, creationOptions);
-
-            //module.Characteristics |= dnlib.PE.Characteristics.Dll;
-            module.Cor20HeaderFlags &= ~ComImageFlags.ILOnly;
-
-            ChangeBitness(module, bitness);
-
-            ExportMethods(module);
-
-            var path = Path.GetDirectoryName(module.Location);
-            var filename = Path.GetFileNameWithoutExtension(module.Location);
-            var extension = Path.GetExtension(module.Location);
-            var saveFilename = $"{filename}.Exported.{bitness}{extension}";
-            var moduleWriterOptions = new ModuleWriterOptions(module)
-                                      {
-                                          AddCheckSum = true,
-                                          WritePdb = true
-                                      };
             module.Write(Path.Combine(path, saveFilename), moduleWriterOptions);
         }
 
@@ -168,7 +144,7 @@
 
             public MethodDef ApplyExport()
             {
-                this.method.ExportInfo = new MethodExportInfo(this.EntryPoint) { Options = MethodExportInfoOptions.FromUnmanaged };
+                this.method.ExportInfo = new MethodExportInfo(this.EntryPoint) { Options = MethodExportInfoOptions.FromUnmanagedRetainAppDomain };
 
                 SetCallingConventionForMethod(this.method, this.CallingConventionClass);
 
@@ -190,6 +166,7 @@
             private static CallingConvention GetCallingConventionFromAttribute(ICustomAttribute exportAttribute)
             {
                 var valueFromAttribute = exportAttribute?.Properties.FirstOrDefault(x => x.Name == "CallingConvention")?.Value;
+
                 return (CallingConvention)(valueFromAttribute ?? CallingConvention.Cdecl);
             }
 
@@ -197,42 +174,68 @@
             {
                 //Console.WriteLine($"CallingConvention: {callingConvention.Name}");
 
-                //var type = method.MethodSig.RetType;
-                //type = new CModOptSig(callingConvention, type);
-                //method.MethodSig.RetType = type;
+                var type = method.MethodSig.RetType;
+                type = new CModOptSig(callingConvention, type);
+                method.MethodSig.RetType = type;
+
+                //method.MethodSig.CallingConvention = dnlib.DotNet.CallingConvention.C;
             }
 
             private static TypeRef GetCallingConventionClass(ModuleDefMD module, CallingConvention callingConvention)
             {
                 var corLibTypes = module.CorLibTypes;
 
-                Console.WriteLine(corLibTypes.AssemblyRef.FullName);
-
                 switch (corLibTypes.AssemblyRef.Name.ToLower())
                 {
                     case "system.runtime":
-                        return GetCallingConventionClassFromSystemRuntime(module, callingConvention);
+                        return GetCallingConventionClassForNetCore(module, callingConvention);
 
                     case "mscorlib":
-                        return GetCallingConventionClassFromMscorlib(module, callingConvention);
+                        return GetCallingConventionClassForNetFramework(module, callingConvention);
 
                     default:
                         throw new Exception($"Unmapped CorLibTypes {corLibTypes.AssemblyRef.FullName}");
                 }
             }
 
-            private static TypeRef GetCallingConventionClassFromSystemRuntime(ModuleDefMD module, CallingConvention callingConvention)
+            private static TypeRef GetCallingConventionClassForNetCore(ModuleDefMD module, CallingConvention callingConvention)
             {
-                var callingConventionAssembly = "System.Runtime.InteropServices";
+                const string callingConventionNamespace = "System.Runtime.CompilerServices";
+                const string callingConventionAssembly = "System.Runtime.CompilerServices.VisualC";
 
+                var callingConventionAssemblyRef = GetCallingConventionAssemblyRefForNetCore(module, callingConventionAssembly);
+
+                if (callingConventionAssemblyRef == null)
+                {
+                    throw new Exception($"Could not find assembly reference for {callingConventionAssembly}.");
+                }
+
+                switch (callingConvention)
+                {
+                    case CallingConvention.Winapi:
+                        return GetTypeRef(module, callingConventionNamespace, "CallConvStdcall", callingConventionAssemblyRef);
+
+                    case CallingConvention.Cdecl:
+                        return GetTypeRef(module, callingConventionNamespace, "CallConvCdecl", callingConventionAssemblyRef);
+
+                    case CallingConvention.StdCall:
+                        return GetTypeRef(module, callingConventionNamespace, "CallConvStdcall", callingConventionAssemblyRef);
+
+                    case CallingConvention.ThisCall:
+                        return GetTypeRef(module, callingConventionNamespace, "CallConvThiscall", callingConventionAssemblyRef);
+
+                    case CallingConvention.FastCall:
+                        return GetTypeRef(module, callingConventionNamespace, "CallConvFastcall", callingConventionAssemblyRef);
+
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(callingConvention), callingConvention, "Unhandled calling convention.");
+                }
+            }
+
+            private static AssemblyRef GetCallingConventionAssemblyRefForNetCore(ModuleDefMD module, string callingConventionAssembly)
+            {
                 var numAsmRefs = module.TablesStream.AssemblyRefTable.Rows;
-                
-                var moduleContext = new ModuleContext();
-                var resolver = new AssemblyResolver(moduleContext);
 
-                AssemblyRef callingConventionAssemblyRef = null;
-                ModuleDefMD callingConventionAssemblyModule = null;
-                
                 for (uint i = 0; i < numAsmRefs; i++)
                 {
                     var assemblyRef = module.ResolveAssemblyRef(i);
@@ -244,117 +247,52 @@
 
                     if (assemblyRef.Name == callingConventionAssembly)
                     {
-                        var assembly = resolver.ResolveThrow(assemblyRef, module);
-
-                        foreach (var assemblyModule in assembly.Modules.OfType<ModuleDefMD>())
-                        {
-                            if (assemblyModule.Assembly.Name == callingConventionAssembly)
-                            {
-                                callingConventionAssemblyRef = assemblyRef;
-                                callingConventionAssemblyModule = assemblyModule;
-                                
-                                break;
-                            }
-                        }
+                        return assemblyRef;
                     }
                 }
 
-                switch (callingConvention)
+                return null;
+            }
+
+            private static TypeRef GetTypeRef(ModuleDefMD assemblyModule, string @namespace, string name, IResolutionScope assemblyRef)
+            {
+                var typeRefUser = new TypeRefUser(assemblyModule, @namespace, name, assemblyRef);
+
+                if (typeRefUser.ResolutionScope == null)
                 {
-                    case CallingConvention.Winapi:
-                        return GetTypeRef(callingConventionAssemblyModule, callingConventionAssembly, "CallConvStdcall", callingConventionAssemblyRef);
-
-                    case CallingConvention.Cdecl:
-                        return GetTypeRef(callingConventionAssemblyModule, callingConventionAssembly, "CallConvCdecl", callingConventionAssemblyRef);
-
-                    case CallingConvention.StdCall:
-                        return GetTypeRef(callingConventionAssemblyModule, callingConventionAssembly, "CallConvStdcall", callingConventionAssemblyRef);
-
-                    case CallingConvention.ThisCall:
-                        return GetTypeRef(callingConventionAssemblyModule, callingConventionAssembly, "CallConvThiscall", callingConventionAssemblyRef);
-
-                    case CallingConvention.FastCall:
-                        return GetTypeRef(callingConventionAssemblyModule, callingConventionAssembly, "CallConvFastcall", callingConventionAssemblyRef);
-
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(callingConvention), callingConvention, "Unhandled calling convention.");
+                    throw new InvalidOperationException("ResolutionScope must not be null.");
                 }
+
+                return assemblyModule.UpdateRowId<TypeRefUser>(typeRefUser);
             }
 
-            private static TypeRef GetTypeRef(ModuleDefMD assemblyModule, string callingConventionAssembly, string name, AssemblyRef assemblyRef)
+            private static TypeRef GetCallingConventionClassForNetFramework(ModuleDefMD module, CallingConvention callingConvention)
             {
-                return (TypeRef)assemblyModule.UpdateRowId<TypeRefUser>(new TypeRefUser(assemblyModule, callingConventionAssembly, name, assemblyRef));
-            }
-
-            private static TypeRef GetCallingConventionClassFromMscorlib(ModuleDefMD module, CallingConvention callingConvention)
-            {
-                const string callingConventionAssembly = "System.Runtime.CompilerServices";
+                const string callingConventionNamespace = "System.Runtime.CompilerServices";
 
                 var corLibTypes = module.CorLibTypes;
 
                 switch (callingConvention)
                 {
                     case CallingConvention.Winapi:
-                        return corLibTypes.GetTypeRef(callingConventionAssembly, "CallConvStdcall");
+                        return corLibTypes.GetTypeRef(callingConventionNamespace, "CallConvStdcall");
 
                     case CallingConvention.Cdecl:
-                        return corLibTypes.GetTypeRef(callingConventionAssembly, "CallConvCdecl");
+                        return corLibTypes.GetTypeRef(callingConventionNamespace, "CallConvCdecl");
 
                     case CallingConvention.StdCall:
-                        return corLibTypes.GetTypeRef(callingConventionAssembly, "CallConvStdcall");
+                        return corLibTypes.GetTypeRef(callingConventionNamespace, "CallConvStdcall");
 
                     case CallingConvention.ThisCall:
-                        return corLibTypes.GetTypeRef(callingConventionAssembly, "CallConvThiscall");
+                        return corLibTypes.GetTypeRef(callingConventionNamespace, "CallConvThiscall");
 
                     case CallingConvention.FastCall:
-                        return corLibTypes.GetTypeRef(callingConventionAssembly, "CallConvFastcall");
+                        return corLibTypes.GetTypeRef(callingConventionNamespace, "CallConvFastcall");
 
                     default:
                         throw new ArgumentOutOfRangeException(nameof(callingConvention), callingConvention, "Unhandled calling convention.");
                 }
             }
-
-            private static ICorLibTypes GetCorLibTypes(ModuleDef module)
-            {
-                foreach (var asmRef in module.GetAssemblyRefs())
-                {
-                    if (IsAssemblyRef(asmRef, systemRuntimeName, contractsPublicKeyToken))
-                    {
-                        return new CorLibTypes(module, asmRef);
-                    }
-                }
-
-                return null;
-            }
-
-            AssemblyRef GetAlternativeCorLibReference(ModuleDefMD module)
-            {
-                foreach (var asmRef in module.GetAssemblyRefs())
-                {
-                    if (IsAssemblyRef(asmRef, systemRuntimeName, contractsPublicKeyToken))
-                        return asmRef;
-                }
-                foreach (var asmRef in module.GetAssemblyRefs())
-                {
-                    if (IsAssemblyRef(asmRef, corefxName, contractsPublicKeyToken))
-                        return asmRef;
-                }
-                return null;
-            }
-
-            static bool IsAssemblyRef(AssemblyRef asmRef, UTF8String name, PublicKeyToken token)
-            {
-                if (asmRef.Name != name)
-                    return false;
-                var pkot = asmRef.PublicKeyOrToken;
-                if (pkot == null)
-                    return false;
-                return token.Equals(pkot.Token);
-            }
-
-            static readonly UTF8String systemRuntimeName = new UTF8String("System.Runtime");
-            static readonly UTF8String corefxName = new UTF8String("corefx");
-            static readonly PublicKeyToken contractsPublicKeyToken = new PublicKeyToken("b03f5f7f11d50a3a");
         }
     }
 }

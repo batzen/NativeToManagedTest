@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Windows;
 using System.Reflection;
 using System.Runtime.Versioning;
@@ -45,7 +45,7 @@ namespace WpfApp1
                                     ? "x64"
                                     : "x86";
 
-            var nativeLibraryPath = Path.Combine(assemblyPath, $"ManagedWithDllExport.{ownDirectoryInfo.Name}.Exported.{bitnessString}.dll");
+            var nativeLibraryPath = Path.Combine(assemblyPath, $"ManagedWithDllExport.{ownDirectoryInfo.Name}.{bitnessString}.dll");
 
             var pDll = NativeMethods.LoadLibrary(nativeLibraryPath);
             //oh dear, error handling here
@@ -71,12 +71,16 @@ namespace WpfApp1
             MessageBox.Show(theResult);
         }
 
-        //[DllImport("ManagedWithDllExport.netcoreapp3.0.Exported.x64.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ManagedMethod")]
-        //[DllImport("ManagedWithDllExport.net462.Exported.x64.dll", EntryPoint = "ManagedMethod")]
-        [DllImport(@"C:\DEV\OSS_Own\NativeToManagedTest\Debug\ManagedWithDllExport.net462.Exported.x64.dll", EntryPoint = "ManagedMethod")]
+        //[DllImport("ManagedWithDllExport.netcoreapp3.0.x64.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ManagedMethod")]
+        //[DllImport("ManagedWithDllExport.net462.x64.dll", EntryPoint = "ManagedMethod")]
+#if NET462
+        [DllImport(@"ManagedWithDllExport.net462.x64.dll", EntryPoint = "ManagedMethod", CallingConvention = CallingConvention.Cdecl)]
+#else
+        [DllImport(@"ManagedWithDllExport.netcoreapp3.0.x64.dll", EntryPoint = "ManagedMethod", CallingConvention = CallingConvention.Cdecl)]
+#endif
         private static extern string ManagedMethodFromDllImport();
 
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate string ManagedMethod();
     }
 

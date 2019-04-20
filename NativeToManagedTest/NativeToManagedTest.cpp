@@ -54,7 +54,7 @@ int CallManagedMethod(LPCWSTR assembly)
 	}
 
 	const auto libraryHandle = LoadLibrary(assembly);
-	//const auto libraryHandle = LoadLibrary(L"ManagedFullExported.dll");
+	
 	if (!libraryHandle)
 	{
 		COUT << GetLastErrorAsString().c_str() << std::endl;
@@ -110,7 +110,7 @@ int CallMessageHookProc(LPCWSTR assembly)
 	}
 
 	const auto libraryHandle = LoadLibrary(assembly);
-	//const auto libraryHandle = LoadLibrary(L"ManagedFullExported.dll");
+
 	if (!libraryHandle)
 	{
 		COUT << GetLastErrorAsString().c_str() << std::endl;
@@ -237,21 +237,21 @@ int main()
 	//{
 	//	COUT << "64 Bit" << std::endl;
 
- //       CallManagedMethod(L"ManagedWithDllExport.net462.Exported.x64.dll");
+ //       CallManagedMethod(L"ManagedWithDllExport.net462.x64.dll");
 
 	//	COUT << std::endl;
 
- //       //CallManagedMethod(L"ManagedWithDllExport.netcoreapp3.0.Exported.x64.dll");
+ //       CallManagedMethod(L"ManagedWithDllExport.netcoreapp3.0.x64.dll");
 	//}
 	//else
 	//{
 	//	COUT << "32 Bit" << std::endl;
 
- //       CallManagedMethod(L"ManagedWithDllExport.net462.Exported.x86.dll");
+ //       CallManagedMethod(L"ManagedWithDllExport.net462.x86.dll");
 
 	//	COUT << std::endl;
 
- //       CallManagedMethod(L"ManagedWithDllExport.netcoreapp3.0.Exported.x86.dll");
+ //       CallManagedMethod(L"ManagedWithDllExport.netcoreapp3.0.x86.dll");
 	//}
 
 	//CallMessageHookProc(L"ManagedFullExported.dll");
@@ -265,24 +265,13 @@ int main()
 
 	if (hwnd)
 	{
-		//Launch(hwnd, L"ManagedWithDllExport.net462.Exported.x64.dll");
-		//Launch(hwnd, L"ManagedWithDllExport.net462.Exported.x86.dll");
-		Launch(hwnd, L"ManagedWithDllExport.netcoreapp3.0.Exported.x64.dll");
-		//Launch(hwnd, L"ManagedWithDllExport.netcoreapp3.0.Exported.x86.dll");
+		Launch(hwnd, L"ManagedWithDllExport.net462.x64.dll");
+		//Launch(hwnd, L"ManagedWithDllExport.net462.x86.dll");
+		//Launch(hwnd, L"ManagedWithDllExport.netcoreapp3.0.x64.dll");
+		//Launch(hwnd, L"ManagedWithDllExport.netcoreapp3.0.x86.dll");
 	}
 
 	//const auto hwnd = (HWND)0x00D61036;
 	//Launch(hwnd, L"ManagedFullExported.dll");
 	//Launch(hwnd, L"ManagedCoreExported.dll");
 }
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
