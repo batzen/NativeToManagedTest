@@ -101,9 +101,14 @@ namespace ManagedWithDllExport
         //{ 
         //}
 
+#pragma warning disable IDE0052 // Remove unread private members
+        // ReSharper disable once UnusedMember.Local
+        private static readonly object forceReference = typeof(CallConvCdecl);
+#pragma warning restore IDE0052 // Remove unread private members
+
         public string EntryPoint { get; set; }
 
-        public CallingConvention CallingConvention { get; set; } = CallingConvention.Cdecl;        
+        public CallingConvention CallingConvention { get; set; } = CallingConvention.Cdecl;
     }
 
     public class VersionInfo
