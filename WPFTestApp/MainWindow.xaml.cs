@@ -30,7 +30,7 @@ namespace WpfApp1
 
         private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
         {
-            //CallViaProcAddress();
+            CallViaProcAddress();
 
             CallViaDllImport();
         }

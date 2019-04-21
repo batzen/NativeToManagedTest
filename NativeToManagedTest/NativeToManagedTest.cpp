@@ -8,6 +8,8 @@
 
 #include "Windows.h"
 #include <string>
+#include <sstream>
+#include "psapi.h"
 
 #ifdef _UNICODE
 #define COUT std::wcout
@@ -213,6 +215,83 @@ void Launch(HWND windowHandle, LPCWSTR assembly) //, System::String^ assembly, S
 	::FreeLibrary(hinstDLL);
 }
 
+std::wstring GetBitnessOfProcess(HWND windowHandle)
+{
+	DWORD processID = 0;
+	auto threadID = ::GetWindowThreadProcessId(windowHandle, &processID);
+
+	if (processID)
+	{
+		auto hProcess = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, processID);
+		if (hProcess)
+		{
+			BOOL isWOW64Process;
+			if (::IsWow64Process(hProcess, &isWOW64Process))
+			{
+				return isWOW64Process ? L"x86" : L"x64";
+			}
+		}
+	}
+
+	return L"";
+}
+
+bool IsDotNetCoreProcess(DWORD processID)
+{
+	HMODULE hMods[1024];
+	HANDLE hProcess;
+	DWORD cbNeeded;
+	unsigned int i;
+
+	// Print the process identifier.
+
+	printf("\nProcess ID: %u\n", processID);
+
+	// Get a handle to the process.
+
+	hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |
+		PROCESS_VM_READ,
+		FALSE, processID);
+	if (NULL == hProcess)
+		return false;
+
+	bool isDotNetCoreProcess = false;
+
+	// Get a list of all the modules in this process.
+
+	if (::EnumProcessModules(hProcess, hMods, sizeof(hMods), &cbNeeded))
+	{
+		for (i = 0; i < (cbNeeded / sizeof(HMODULE)); i++)
+		{
+			TCHAR szModName[MAX_PATH];
+
+			// Get the full path to the module's file.
+
+			if (::GetModuleFileNameEx(hProcess, hMods[i], szModName,
+				sizeof(szModName) / sizeof(TCHAR)))
+			{
+				std::wstring str(szModName);
+				if (str.rfind(L"wpfgfx_cor3") != std::wstring::npos)
+				{
+					isDotNetCoreProcess = true;
+					break;
+				}
+
+				//// Print the module name and handle value.
+
+				//OutputDebugString(szModName);
+				//OutputDebugString(L"\r\n");
+			}
+		}
+	}
+
+	// Release the handle to the process.
+
+	CloseHandle(hProcess);
+
+	return isDotNetCoreProcess;
+}
+
 int main()
 {
 	COUT << "Hello from Native!" << std::endl;
@@ -259,19 +338,28 @@ int main()
 
 	COUT << "Trying to find ControlzEx.Showcase..." << std::endl;
 
-	const auto hwnd = FindWindow(nullptr, L"MainWindow");
+	const auto hwnd = FindWindow(nullptr, L"WPFTestApp");
 
 	COUT << "Found hwnd = " << hwnd << std::endl;
 
 	if (hwnd)
 	{
-		Launch(hwnd, L"ManagedWithDllExport.net462.x64.dll");
+		DWORD processID = 0;
+		auto threadID = ::GetWindowThreadProcessId(hwnd, &processID);
+
+		const auto framework = IsDotNetCoreProcess(processID) ? L"netcoreapp3.0" : L"net462";
+
+		const auto bitness = GetBitnessOfProcess(hwnd);
+
+		std::wstringstream stringStream;
+		stringStream << "ManagedWithDllExport." << framework << "." << bitness << ".dll";
+		std::wstring assemblyName = stringStream.str();
+
+		Launch(hwnd, assemblyName.c_str());
+
+		//Launch(hwnd, L"ManagedWithDllExport.net462.x64.dll");
 		//Launch(hwnd, L"ManagedWithDllExport.net462.x86.dll");
-		//Launch(hwnd, L"ManagedWithDllExport.netcoreapp3.0.x64.dll");
+		//Launch(hwnd,  L"ManagedWithDllExport.netcoreapp3.0.x64.dll");
 		//Launch(hwnd, L"ManagedWithDllExport.netcoreapp3.0.x86.dll");
 	}
-
-	//const auto hwnd = (HWND)0x00D61036;
-	//Launch(hwnd, L"ManagedFullExported.dll");
-	//Launch(hwnd, L"ManagedCoreExported.dll");
 }
