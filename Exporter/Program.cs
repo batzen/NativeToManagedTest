@@ -90,12 +90,14 @@
             {
                 case Bitness.x86:
                     module.Machine = dnlib.PE.Machine.I386;
+                    module.Cor20HeaderFlags &= ~ComImageFlags.ILOnly;
                     module.Cor20HeaderFlags &= ~ComImageFlags.Bit32Preferred;
                     module.Cor20HeaderFlags |= ComImageFlags.Bit32Required;
                     break;
 
                 case Bitness.x64:
                     module.Machine = dnlib.PE.Machine.AMD64;
+                    module.Cor20HeaderFlags &= ~ComImageFlags.ILOnly;
                     module.Cor20HeaderFlags &= ~ComImageFlags.Bit32Preferred;
                     module.Cor20HeaderFlags &= ~ComImageFlags.Bit32Required;
                     break;
@@ -144,7 +146,7 @@
 
             public MethodDef ApplyExport()
             {
-                this.method.ExportInfo = new MethodExportInfo(this.EntryPoint) { Options = MethodExportInfoOptions.FromUnmanagedRetainAppDomain };
+                this.method.ExportInfo = new MethodExportInfo(this.EntryPoint) { Options = MethodExportInfoOptions.FromUnmanaged };
 
                 SetCallingConventionForMethod(this.method, this.CallingConventionClass);
 
@@ -207,6 +209,7 @@
 
                 if (callingConventionAssemblyRef == null)
                 {
+                    Debugger.Launch();
                     throw new Exception($"Could not find assembly reference for {callingConventionAssembly}.");
                 }
 
@@ -236,10 +239,8 @@
             {
                 var numAsmRefs = module.TablesStream.AssemblyRefTable.Rows;
 
-                for (uint i = 0; i < numAsmRefs; i++)
+                foreach (var assemblyRef in module.GetAssemblyRefs())
                 {
-                    var assemblyRef = module.ResolveAssemblyRef(i);
-
                     if (assemblyRef is null)
                     {
                         continue;
