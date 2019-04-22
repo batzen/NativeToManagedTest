@@ -356,6 +356,12 @@ int main()
 		std::wstring assemblyName = stringStream.str();
 
 		Launch(hwnd, assemblyName.c_str());
+		//Launch(hwnd, L"C:\\DEV\\OSS_Own\\snoopwpf (batzen)\\bin\\Debug\\test.dll");
+		//Launch(hwnd, L"C:\\DEV\\OSS_Own\\snoopwpf\\bin\\Debug\\ManagedInjector.netcoreapp3.0.x64.dll");
+		//Launch(hwnd, L"C:\\DEV\\OSS_Own\\snoopwpf\\bin\\Debug\\ManagedInjector.net40.x64.dll");
+		//Launch(hwnd, L"C:\\DEV\\OSS_Own\\ManagedInjector.netcoreapp3.0.x64.dll");
+		//Launch(hwnd, L"C:\\DEV\\OSS_Own\\NativeToManagedTest\\bin\\Debug\\ManagedInjector.netcoreapp3.0.x64.dll");
+		//Launch(hwnd, L"C:\\DEV\\OSS_Own\\NativeToManagedTest\\bin\\Debug\\ManagedInjector.netcoreapp3.0.x64.dll");
 
 		//Launch(hwnd, L"ManagedWithDllExport.net462.x64.dll");
 		//Launch(hwnd, L"ManagedWithDllExport.net462.x86.dll");
