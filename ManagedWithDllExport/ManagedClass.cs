@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace ManagedWithDllExport
 {
@@ -15,7 +15,7 @@ namespace ManagedWithDllExport
 
     public static class ManagedClass
     {
-        private static uint messageId;
+        private static readonly uint messageId;
 
         [DllImport("user32.dll", SetLastError=true, CharSet=CharSet.Auto)]
         private static extern uint RegisterWindowMessage(string lpString);
