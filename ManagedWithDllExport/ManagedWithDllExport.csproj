@@ -11,7 +11,7 @@
     </PropertyGroup>
 
     <Target Name="DllExport" Condition="Exists('$(TargetPath)')" AfterTargets="CopyFilesToOutputDirectory">
-        <Message Importance="high" Text="Calling dll export generator for assembly '$(TargetPath)'... $(TargetName).Exported.*.dll" />
+        <Message Importance="high" Text="Calling dll export generator for assembly '$(TargetPath)'... $(TargetName).*.dll" />
 
         <Exec Command="$(OutputPath)\exporter.exe &quot;$(TargetPath)&quot;" WorkingDirectory="$(OutputPath)" />
 
