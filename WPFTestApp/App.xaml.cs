@@ -22,14 +22,14 @@
 #if NET462
 
 #else
-            if (Environment.Is64BitProcess)
-            {
-                Assembly.LoadFile(Path.Combine(assemblyPath, $"ManagedWithDllExport.{ownDirectoryInfo.Name}.x64.dll"));
-            }
-            else
-            {
-                Assembly.LoadFile(Path.Combine(assemblyPath, $"ManagedWithDllExport.{ownDirectoryInfo.Name}.x86.dll"));
-            }
+            //if (Environment.Is64BitProcess)
+            //{
+            //    Assembly.LoadFile(Path.Combine(assemblyPath, $"ManagedWithDllExport.{ownDirectoryInfo.Name}.x64.dll"));
+            //}
+            //else
+            //{
+            //    Assembly.LoadFile(Path.Combine(assemblyPath, $"ManagedWithDllExport.{ownDirectoryInfo.Name}.x86.dll"));
+            //}
 #endif
         }
     }
