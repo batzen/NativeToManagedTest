@@ -106,8 +106,9 @@ namespace Exporter
 
         private static void ExportMethods(ModuleDefMD module)
         {
-            var methods = module.Types.SelectMany(x => x.Methods)
-                .Where(x => x.CustomAttributes.Any(IsDllExportAttribute));
+            var methods = module.GetTypes()
+                                .SelectMany(x => x.Methods)
+                                .Where(x => x.CustomAttributes.Any(IsDllExportAttribute));
 
             foreach (var method in methods)
             {
