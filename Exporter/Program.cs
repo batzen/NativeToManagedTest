@@ -78,6 +78,8 @@ namespace Exporter
             var extension = Path.GetExtension(module.Location);
             var saveFilename = $"{filename}.{bitness}{extension}";
 
+            module.Name = saveFilename;
+
             var moduleWriterOptions = new ModuleWriterOptions(module)
                                       {
                                           AddCheckSum = true,
