@@ -64,9 +64,6 @@ namespace Exporter
                                   };
             using var module = ModuleDefMD.Load(assembly, creationOptions);
 
-            //module.Characteristics |= dnlib.PE.Characteristics.Dll;
-            module.Cor20HeaderFlags &= ~ComImageFlags.ILOnly;
-
             ChangeBitness(module, bitness);
 
             modifyAction?.Invoke(module);
