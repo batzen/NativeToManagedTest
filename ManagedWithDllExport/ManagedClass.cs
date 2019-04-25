@@ -78,7 +78,7 @@ namespace ManagedWithDllExport
     }
 
     [Serializable]
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Method, Inherited = false)]
     public sealed class DllExportAttribute : Attribute
     {
         //public DllExportAttribute(string exportName, CallingConvention callingConvention) 
@@ -100,11 +100,6 @@ namespace ManagedWithDllExport
         //public DllExportAttribute()
         //{ 
         //}
-
-#pragma warning disable IDE0052 // Remove unread private members
-        // ReSharper disable once UnusedMember.Local
-        private static readonly object forceReference = typeof(CallConvCdecl);
-#pragma warning restore IDE0052 // Remove unread private members
 
         public string EntryPoint { get; set; }
 

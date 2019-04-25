@@ -1,4 +1,4 @@
-﻿namespace Exporter
+namespace Exporter
 {
     using System;
     using System.Diagnostics;
@@ -203,14 +203,14 @@
             private static TypeRef GetCallingConventionClassForNetCore(ModuleDefMD module, CallingConvention callingConvention)
             {
                 const string callingConventionNamespace = "System.Runtime.CompilerServices";
-                const string callingConventionAssembly = "System.Runtime.CompilerServices.VisualC";
+                const string callingConventionAssemblyName = "System.Runtime.CompilerServices.VisualC";
 
-                var callingConventionAssemblyRef = GetCallingConventionAssemblyRefForNetCore(module, callingConventionAssembly);
+                var callingConventionAssemblyRef = GetCallingConventionAssemblyRefForNetCore(module, callingConventionAssemblyName);
 
                 if (callingConventionAssemblyRef == null)
                 {
                     Debugger.Launch();
-                    throw new Exception($"Could not find assembly reference for {callingConventionAssembly}.");
+                    throw new Exception($"Could not find assembly reference for {callingConventionAssemblyName}.");
                 }
 
                 switch (callingConvention)
@@ -235,7 +235,7 @@
                 }
             }
 
-            private static AssemblyRef GetCallingConventionAssemblyRefForNetCore(ModuleDefMD module, string callingConventionAssembly)
+            private static AssemblyRef GetCallingConventionAssemblyRefForNetCore(ModuleDefMD module, string callingConventionAssemblyName)
             {
                 var numAsmRefs = module.TablesStream.AssemblyRefTable.Rows;
 
@@ -246,13 +246,16 @@
                         continue;
                     }
 
-                    if (assemblyRef.Name == callingConventionAssembly)
+                    if (assemblyRef.Name == callingConventionAssemblyName)
                     {
                         return assemblyRef;
                     }
                 }
 
-                return null;
+                var compilerServicesAssembly = new AssemblyRefUser(module.Context.AssemblyResolver.ResolveThrow(new AssemblyRefUser(callingConventionAssemblyName), module));
+                module.UpdateRowId(compilerServicesAssembly);
+
+                return compilerServicesAssembly;
             }
 
             private static TypeRef GetTypeRef(ModuleDefMD assemblyModule, string @namespace, string name, IResolutionScope assemblyRef)
