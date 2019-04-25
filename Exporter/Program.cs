@@ -59,6 +59,7 @@ namespace Exporter
         {
             var creationOptions = new ModuleCreationOptions
                                   {
+                                      Context = ModuleDef.CreateModuleContext(),
                                       TryToLoadPdbFromDisk = true
                                   };
             using var module = ModuleDefMD.Load(assembly, creationOptions);
