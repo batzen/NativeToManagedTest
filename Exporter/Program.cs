@@ -70,6 +70,8 @@ namespace Exporter
 
             modifyAction?.Invoke(module);
 
+            DisableEditAndContinueForModule(module);
+
             var path = Path.GetDirectoryName(module.Location);
             var filename = Path.GetFileNameWithoutExtension(module.Location);
             var extension = Path.GetExtension(module.Location);
@@ -101,6 +103,29 @@ namespace Exporter
                     module.Cor20HeaderFlags &= ~ComImageFlags.Bit32Preferred;
                     module.Cor20HeaderFlags &= ~ComImageFlags.Bit32Required;
                     break;
+            }
+        }
+
+        private static void DisableEditAndContinueForModule(ModuleDefMD module)
+        {
+            var ca = module.Assembly.CustomAttributes.Find("System.Diagnostics.DebuggableAttribute");
+            if (ca == null
+                || ca.ConstructorArguments.Count != 1)
+            {
+                return;
+            }
+
+            var arg = ca.ConstructorArguments[0];
+
+            var editAndContinueValue = (int)DebuggableAttribute.DebuggingModes.EnableEditAndContinue;
+
+            // VS' debugger crashes if value == 0x107, so clear EnC bit
+            if (arg.Type.FullName == "System.Diagnostics.DebuggableAttribute/DebuggingModes" 
+                && arg.Value is int value 
+                && (value & editAndContinueValue) != 0)
+            {
+                arg.Value = value & ~editAndContinueValue;
+                ca.ConstructorArguments[0] = arg;
             }
         }
 
