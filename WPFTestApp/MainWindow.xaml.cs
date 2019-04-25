@@ -7,7 +7,9 @@ namespace WpfApp1
 {
     using System;
     using System.IO;
+    using System.Runtime.ExceptionServices;
     using System.Runtime.InteropServices;
+    using System.Security;
     using System.Text;
 
     public partial class MainWindow : Window
@@ -28,11 +30,35 @@ namespace WpfApp1
             Application.Current.Shutdown();
         }
 
+        [SecurityCritical]
+        [HandleProcessCorruptedStateExceptions]
         private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
         {
-            CallViaProcAddress();
+            try
+            {
+                CallViaProcAddress();
+            }
+            catch (SEHException exception)
+            {
+                MessageBox.Show(exception.ToString());
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.ToString());
+            }
 
-            CallViaDllImport();
+            try
+            {
+                CallViaDllImport();
+            }
+            catch (SEHException exception)
+            {
+                MessageBox.Show(exception.ToString());
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.ToString());
+            }
         }
 
         private static void CallViaProcAddress()
