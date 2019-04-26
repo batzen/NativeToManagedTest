@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28407.52
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NativeToManagedTest", "NativeToManagedTest\NativeToManagedTest.vcxproj", "{3408A716-93C9-40D2-8B9C-4E5313F57779}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ManagedWithDllExport", "ManagedWithDllExport\ManagedWithDllExport.csproj", "{7D681976-8784-4438-A144-2BD7A6DA657C}"
 	ProjectSection(ProjectDependencies) = postProject
 		{F43ABEBF-5619-4D29-8192-A64277B01F15} = {F43ABEBF-5619-4D29-8192-A64277B01F15}
