@@ -4,11 +4,13 @@ namespace Exporter
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
-    using System.Runtime.CompilerServices;
+    using System.Text;
     using System.Threading;
     using dnlib.DotNet;
     using dnlib.DotNet.MD;
     using dnlib.DotNet.Writer;
+    using dnlib.IO;
+    using dnlib.PE;
     using CallingConvention = System.Runtime.InteropServices.CallingConvention;
 
     public static class Program
@@ -82,8 +84,30 @@ namespace Exporter
                                           AddCheckSum = true,
                                           WritePdb = true
                                       };
+            var moduleWriter = new ModuleWriter(module, moduleWriterOptions);
 
-            module.Write(Path.Combine(path, saveFilename), moduleWriterOptions);
+            ReplaceMSCOREEReferenceWithIJWHostForNetCoreApp(module, moduleWriter);
+
+            moduleWriter.Write(Path.Combine(path, saveFilename));
+        }
+
+        private static void ReplaceMSCOREEReferenceWithIJWHostForNetCoreApp(ModuleDefMD module, ModuleWriter moduleWriter)
+        {
+            module.Assembly.TryGetOriginalTargetFrameworkAttribute(out var framework, out var version, out var profile);
+
+            if (framework == ".NETCoreApp")
+            {
+                moduleWriter.Options.WriterEvent += OnWriterEvent;
+            }
+        }
+
+        private static void OnWriterEvent(object sender, ModuleWriterEventArgs e)
+        {
+            if (e.Event == ModuleWriterEvent.ChunksCreated)
+            {
+                var moduleWriter = (ModuleWriter)e.Writer;
+                moduleWriter.ImportDirectory.DllToImport = "ijwhost.dll";
+            }
         }
 
         private static void ChangeBitness(ModuleDefMD module, Bitness bitness)
