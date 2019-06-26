@@ -6,6 +6,7 @@ using System.Runtime.Versioning;
 namespace WpfApp1
 {
     using System;
+    using System.ComponentModel;
     using System.IO;
     using System.Runtime.ExceptionServices;
     using System.Runtime.InteropServices;
@@ -71,9 +72,18 @@ namespace WpfApp1
                                     ? "x64"
                                     : "x86";
 
-            var nativeLibraryPath = Path.Combine(assemblyPath, $"ManagedWithDllExport.{ownDirectoryInfo.Name}.{bitnessString}.dll");
+            var frameworkName = ownDirectoryInfo.Name;
 
-            var pDll = NativeMethods.LoadLibrary(nativeLibraryPath);
+            var managedWithDllExport = Path.Combine(assemblyPath, $"ManagedWithDllExport.{frameworkName}.{bitnessString}.dll");
+
+            if (frameworkName == "netcoreapp3.0")
+            {
+                {
+                    InjectIJWHost(managedWithDllExport);
+                }
+            }
+
+            var pDll = NativeMethods.LoadLibrary(managedWithDllExport);
             //oh dear, error handling here
             //if (pDll == IntPtr.Zero)
 
@@ -90,6 +100,29 @@ namespace WpfApp1
             MessageBox.Show(theResult);
         }
 
+        private static void InjectIJWHost(string nativeLibrabryPath)
+        {
+            var handle = NativeMethods.GetModuleHandle("ijwhost.dll");
+
+            // Nothing to do as IJWHost is already loaded
+            if (handle != IntPtr.Zero)
+            {
+                return;
+            }
+
+            handle = NativeMethods.LoadLibrary("ijwhost.dll");
+
+            if (handle == IntPtr.Zero)
+            {
+                var pathToIJWHost = Path.Combine(Path.GetDirectoryName(nativeLibrabryPath), "ijwhost.dll");
+                handle = NativeMethods.LoadLibrary(pathToIJWHost);
+            }
+
+            if (handle == IntPtr.Zero)
+            {
+                throw new Exception("ijwhost.dll could not be loaded.");
+            }
+        }
         private static void CallViaDllImport()
         {
             var theResult = ManagedMethodFromDllImport();
@@ -116,6 +149,9 @@ namespace WpfApp1
         public static extern IntPtr LoadLibrary(string dllToLoad);
 
         [DllImport("kernel32.dll")]
+        public static extern IntPtr GetModuleHandle(string dllToLoad);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
         public static extern IntPtr GetProcAddress(IntPtr hModule, string procedureName);
 
 
